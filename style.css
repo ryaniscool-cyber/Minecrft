@@ -3,20 +3,20 @@ html, body {
   height: 100%;
   overflow: hidden;
   background: #111;
+  font-family: system-ui, sans-serif;
+}
+
+canvas {
+  display: block;
 }
 
 #ui {
   position: fixed;
   top: 10px;
   left: 10px;
-  color: #fff;
-  font-family: system-ui, sans-serif;
-  background: rgba(0, 0, 0, 0.4);
-  padding: 10px 14px;
-  border-radius: 8px;
+  color: white;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 10px 15px;
+  border-radius: 10px;
   z-index: 10;
-}
-
-canvas {
-  display: block;
 }
