@@ -1,100 +1,95 @@
-import * as THREE from 'three';
-import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js';
+import * as THREE from 'https://unpkg.com/three@0.161.0/build/three.module.js';
+import { PointerLockControls } from 'https://unpkg.com/three@0.161.0/examples/jsm/controls/PointerLockControls.js';
 
-// Setup
+// Scene setup
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x87ceeb);
+scene.background = new THREE.Color(0x87ceeb); // sky blue
 
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setSize(innerWidth, innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// Lighting
-scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-dirLight.position.set(10, 20, 10);
-scene.add(dirLight);
+// Lights
+scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+const sun = new THREE.DirectionalLight(0xffffff, 1);
+sun.position.set(10, 20, 10);
+scene.add(sun);
 
-// Controls
-const controls = new PointerLockControls(camera, document.body);
+// Pointer lock controls
+const controls = new PointerLockControls(camera, renderer.domElement);
 document.addEventListener('click', () => controls.lock());
 
-// Terrain generator
-const blockSize = 1;
-const worldSize = 20;
-const noiseScale = 0.2;
+// Keyboard input
+const keys = {};
+document.addEventListener('keydown', e => keys[e.code] = true);
+document.addEventListener('keyup', e => keys[e.code] = false);
 
-function generateHeight(x, z) {
-  return Math.floor(Math.sin(x * noiseScale) * Math.cos(z * noiseScale) * 3 + 3);
-}
+// Generate Minecraft-style terrain
+const blockSize = 1;
+const terrainWidth = 20;
+const terrainDepth = 20;
 
 const blockGeo = new THREE.BoxGeometry(blockSize, blockSize, blockSize);
 const blockMat = new THREE.MeshLambertMaterial({ color: 0x55aa33 });
 
-for (let x = -worldSize / 2; x < worldSize / 2; x++) {
-  for (let z = -worldSize / 2; z < worldSize / 2; z++) {
-    const h = generateHeight(x, z);
-    for (let y = 0; y < h; y++) {
-      const block = new THREE.Mesh(blockGeo, blockMat);
-      block.position.set(x, y * blockSize, z);
-      scene.add(block);
+for (let x = -terrainWidth / 2; x < terrainWidth / 2; x++) {
+  for (let z = -terrainDepth / 2; z < terrainDepth / 2; z++) {
+    const height = Math.floor(Math.random() * 4); // random hills
+    for (let y = 0; y <= height; y++) {
+      const cube = new THREE.Mesh(blockGeo, blockMat);
+      cube.position.set(x, y, z);
+      scene.add(cube);
     }
   }
 }
 
+// Camera setup
 camera.position.set(0, 5, 10);
+controls.getObject().position.set(0, 5, 10);
 
 // Movement
-const keys = { w: false, a: false, s: false, d: false, space: false };
-document.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
-document.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
-
 let velocityY = 0;
 let canJump = false;
+const gravity = 0.15;
 
 function animate() {
   requestAnimationFrame(animate);
-  const delta = 0.016;
-  const moveSpeed = 5;
 
-  const direction = new THREE.Vector3();
-  if (keys.w) direction.z -= 1;
-  if (keys.s) direction.z += 1;
-  if (keys.a) direction.x -= 1;
-  if (keys.d) direction.x += 1;
-  direction.normalize();
+  if (controls.isLocked) {
+    let moveSpeed = 0.15;
+    const dir = new THREE.Vector3();
 
-  const forward = new THREE.Vector3();
-  camera.getWorldDirection(forward);
-  forward.y = 0;
-  forward.normalize();
-  const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+    if (keys['KeyW']) dir.z -= moveSpeed;
+    if (keys['KeyS']) dir.z += moveSpeed;
+    if (keys['KeyA']) dir.x -= moveSpeed;
+    if (keys['KeyD']) dir.x += moveSpeed;
 
-  const move = new THREE.Vector3();
-  move.addScaledVector(forward, direction.z * moveSpeed * delta);
-  move.addScaledVector(right, direction.x * moveSpeed * delta);
-  controls.getObject().position.add(move);
+    // Gravity and jump
+    velocityY -= gravity;
+    if (keys['Space'] && canJump) {
+      velocityY = 0.3;
+      canJump = false;
+    }
 
-  // Gravity
-  velocityY -= 9.8 * delta;
-  if (keys.space && canJump) {
-    velocityY = 5;
-    canJump = false;
-  }
-  controls.getObject().position.y += velocityY * delta;
-  if (controls.getObject().position.y < 2) {
-    controls.getObject().position.y = 2;
-    velocityY = 0;
-    canJump = true;
+    controls.moveRight(dir.x);
+    controls.moveForward(dir.z);
+    controls.getObject().position.y += velocityY;
+
+    if (controls.getObject().position.y < 3) {
+      controls.getObject().position.y = 3;
+      velocityY = 0;
+      canJump = true;
+    }
   }
 
   renderer.render(scene, camera);
 }
+
 animate();
 
 window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setSize(innerWidth, innerHeight);
 });
