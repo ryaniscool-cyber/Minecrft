@@ -1,16 +1,53 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>MiniCraft — Click to Play</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <div id="ui">
-    <h2>MiniCraft — Click to Play</h2>
-    <p>Move: W A S D | Jump: Space | Look: Mouse</p>
-  </div>
-  <script type="module" src="main.js"></script>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MiniCraft — Minecraft-like Demo</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #000;
+      }
+      canvas {
+        display: block;
+      }
+      #ui {
+        position: fixed;
+        left: 10px;
+        top: 10px;
+        color: white;
+        background: rgba(0, 0, 0, 0.6);
+        padding: 10px 15px;
+        border-radius: 10px;
+        font-family: system-ui, sans-serif;
+        z-index: 10;
+      }
+      .key {
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.15);
+        padding: 3px 6px;
+        border-radius: 4px;
+        margin: 0 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="ui">
+      <h2 style="margin: 0; font-size: 18px">MiniCraft — Click to Play</h2>
+      <p style="margin: 5px 0 0">
+        Move: <span class="key">W</span>
+        <span class="key">A</span>
+        <span class="key">S</span>
+        <span class="key">D</span> | Jump:
+        <span class="key">Space</span> | Look: Mouse
+      </p>
+    </div>
+
+    <!-- Main game script -->
+    <script type="module" src="./main.js"></script>
+  </body>
 </html>
