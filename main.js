@@ -1,109 +1,162 @@
-// main.js
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js';
-import { PointerLockControls } from 'https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/controls/PointerLockControls.js';
+import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.module.js";
+import { PointerLockControls } from "https://cdn.jsdelivr.net/npm/three@0.158.0/examples/jsm/controls/PointerLockControls.js";
 
-// Scene setup
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x87ceeb); // sky blue
+let camera, scene, renderer, controls;
+let overlay = document.getElementById("overlay");
+let moveForward = false,
+  moveBackward = false,
+  moveLeft = false,
+  moveRight = false,
+  canJump = false;
+let velocity = new THREE.Vector3();
+let direction = new THREE.Vector3();
 
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
+init();
+animate();
 
-// Lighting
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-scene.add(ambientLight);
-const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-dirLight.position.set(5, 10, 7.5);
-scene.add(dirLight);
+function init() {
+  // Scene setup
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x87ceeb); // sky blue
 
-// Controls
-const controls = new PointerLockControls(camera, document.body);
-camera.position.set(0, 2, 5);
+  camera = new THREE.PerspectiveCamera(
+    75,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    1000
+  );
 
-// Overlay handling
-const overlay = document.getElementById('overlay');
-overlay.addEventListener('click', () => {
-  controls.lock();
-});
-controls.addEventListener('lock', () => {
-  overlay.classList.add('hidden');
-});
-controls.addEventListener('unlock', () => {
-  overlay.classList.remove('hidden');
-});
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(renderer.domElement);
 
-// Movement
-const keys = { w: false, a: false, s: false, d: false, space: false };
-document.addEventListener('keydown', e => {
-  if (e.code === 'KeyW') keys.w = true;
-  if (e.code === 'KeyS') keys.s = true;
-  if (e.code === 'KeyA') keys.a = true;
-  if (e.code === 'KeyD') keys.d = true;
-  if (e.code === 'Space') keys.space = true;
-});
-document.addEventListener('keyup', e => {
-  if (e.code === 'KeyW') keys.w = false;
-  if (e.code === 'KeyS') keys.s = false;
-  if (e.code === 'KeyA') keys.a = false;
-  if (e.code === 'KeyD') keys.d = false;
-  if (e.code === 'Space') keys.space = false;
-});
+  // Controls setup
+  controls = new PointerLockControls(camera, document.body);
+  scene.add(controls.getObject());
 
-// Ground
-const ground = new THREE.Mesh(
-  new THREE.BoxGeometry(100, 1, 100),
-  new THREE.MeshLambertMaterial({ color: 0x228b22 })
-);
-ground.position.y = -0.5;
-scene.add(ground);
+  // Overlay click to start
+  overlay.addEventListener("click", () => {
+    controls.lock();
+  });
 
-// Cube
-const cube = new THREE.Mesh(
-  new THREE.BoxGeometry(1, 1, 1),
-  new THREE.MeshLambertMaterial({ color: 0xff0000 })
-);
-cube.position.y = 0.5;
-scene.add(cube);
+  controls.addEventListener("lock", () => {
+    overlay.classList.add("hidden");
+  });
 
-// Physics and animation
-let velocityY = 0;
-let canJump = true;
-const gravity = 9.8;
-const speed = 5;
+  controls.addEventListener("unlock", () => {
+    overlay.classList.remove("hidden");
+  });
+
+  // Floor
+  const floorGeometry = new THREE.PlaneGeometry(200, 200, 10, 10);
+  const floorMaterial = new THREE.MeshStandardMaterial({ color: 0x228b22 });
+  const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+  floor.rotation.x = -Math.PI / 2;
+  floor.receiveShadow = true;
+  scene.add(floor);
+
+  // Cube (player test block)
+  const cubeGeometry = new THREE.BoxGeometry(2, 2, 2);
+  const cubeMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+  const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+  cube.position.set(0, 1, -5);
+  scene.add(cube);
+
+  // Lighting
+  const light = new THREE.DirectionalLight(0xffffff, 1);
+  light.position.set(10, 20, 10);
+  scene.add(light);
+
+  const ambient = new THREE.AmbientLight(0x404040);
+  scene.add(ambient);
+
+  // Events
+  document.addEventListener("keydown", onKeyDown);
+  document.addEventListener("keyup", onKeyUp);
+  window.addEventListener("resize", onWindowResize);
+
+  camera.position.y = 2;
+}
+
+// Movement controls
+function onKeyDown(event) {
+  switch (event.code) {
+    case "ArrowUp":
+    case "KeyW":
+      moveForward = true;
+      break;
+    case "ArrowLeft":
+    case "KeyA":
+      moveLeft = true;
+      break;
+    case "ArrowDown":
+    case "KeyS":
+      moveBackward = true;
+      break;
+    case "ArrowRight":
+    case "KeyD":
+      moveRight = true;
+      break;
+    case "Space":
+      if (canJump) velocity.y += 5;
+      canJump = false;
+      break;
+  }
+}
+
+function onKeyUp(event) {
+  switch (event.code) {
+    case "ArrowUp":
+    case "KeyW":
+      moveForward = false;
+      break;
+    case "ArrowLeft":
+    case "KeyA":
+      moveLeft = false;
+      break;
+    case "ArrowDown":
+    case "KeyS":
+      moveBackward = false;
+      break;
+    case "ArrowRight":
+    case "KeyD":
+      moveRight = false;
+      break;
+  }
+}
+
+function onWindowResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}
 
 function animate() {
   requestAnimationFrame(animate);
 
-  if (controls.isLocked === true) {
-    const delta = 0.016;
+  if (controls.isLocked) {
+    const delta = 0.05;
 
-    const direction = new THREE.Vector3();
-    const forward = new THREE.Vector3();
-    camera.getWorldDirection(forward);
-    forward.y = 0;
-    forward.normalize();
+    velocity.x -= velocity.x * 10.0 * delta;
+    velocity.z -= velocity.z * 10.0 * delta;
+    velocity.y -= 9.8 * 5.0 * delta; // gravity
 
-    const right = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), forward).normalize();
-
-    if (keys.w) direction.add(forward);
-    if (keys.s) direction.sub(forward);
-    if (keys.a) direction.sub(right);
-    if (keys.d) direction.add(right);
+    direction.z = Number(moveForward) - Number(moveBackward);
+    direction.x = Number(moveRight) - Number(moveLeft);
     direction.normalize();
 
-    controls.getObject().position.addScaledVector(direction, speed * delta);
+    if (moveForward || moveBackward)
+      velocity.z -= direction.z * 50.0 * delta;
+    if (moveLeft || moveRight)
+      velocity.x -= direction.x * 50.0 * delta;
 
-    // Jumping
-    velocityY -= gravity * delta;
-    if (keys.space && canJump) {
-      velocityY = 5;
-      canJump = false;
-    }
-    controls.getObject().position.y += velocityY * delta;
+    controls.moveRight(-velocity.x * delta);
+    controls.moveForward(-velocity.z * delta);
+
+    controls.getObject().position.y += velocity.y * delta;
+
     if (controls.getObject().position.y < 2) {
-      velocityY = 0;
+      velocity.y = 0;
       controls.getObject().position.y = 2;
       canJump = true;
     }
@@ -111,10 +164,3 @@ function animate() {
 
   renderer.render(scene, camera);
 }
-animate();
-
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
