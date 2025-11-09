@@ -3,12 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MiniCraft</title>
+    <title>MiniCraft — Test</title>
     <style>
       body {
         margin: 0;
         overflow: hidden;
-        background-color: #000;
+        background-color: black;
+        color: white;
         font-family: sans-serif;
       }
       #ui {
@@ -16,7 +17,6 @@
         top: 10px;
         left: 10px;
         background: rgba(0, 0, 0, 0.8);
-        color: white;
         padding: 16px;
         border-radius: 8px;
       }
@@ -24,10 +24,33 @@
   </head>
   <body>
     <div id="ui">
-      <h2>MiniCraft — Click to Play</h2>
-      <p>Move: W A S D | Jump: Space | Look: Mouse</p>
+      <h2>MiniCraft Test</h2>
+      <p>If you see a color fill below, scripts are working ✅</p>
+      <p>If it stays black, something’s broken ❌</p>
     </div>
 
-    <script type="module" src="./main.js"></script>
+    <canvas id="gameCanvas"></canvas>
+
+    <script type="module">
+      const canvas = document.getElementById("gameCanvas");
+      const ctx = canvas.getContext("2d");
+
+      // Resize canvas to full window
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      // Fill background with color
+      ctx.fillStyle = "dodgerblue";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw test square
+      ctx.fillStyle = "red";
+      ctx.fillRect(canvas.width / 2 - 50, canvas.height / 2 - 50, 100, 100);
+
+      // Text
+      ctx.fillStyle = "white";
+      ctx.font = "20px sans-serif";
+      ctx.fillText("Canvas loaded successfully!", 20, 60);
+    </script>
   </body>
 </html>
