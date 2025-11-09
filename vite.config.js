@@ -1,6 +1,5 @@
-export default {
-  base: './',
-  server: {
-    open: true
-  }
-};
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  base: "./",
+});
