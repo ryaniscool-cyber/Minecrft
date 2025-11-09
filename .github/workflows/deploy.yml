@@ -2,21 +2,17 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches:
-      - main  # Deploy when code is pushed to main
-
-permissions:
-  contents: write
+    branches: [ main ]
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout 🛎️
         uses: actions/checkout@v3
 
-      - name: Set up Node.js
+      - name: Setup Node
         uses: actions/setup-node@v3
         with:
           node-version: 18
@@ -24,10 +20,10 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build the project
+      - name: Build
         run: npm run build
 
-      - name: Deploy to GitHub Pages
+      - name: Deploy 🚀
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
